@@ -1,6 +1,6 @@
 # EcoTrack Mobile
 
-## EcoTrack Mobile is a smart energy monitoring and control application built with Flutter.
+EcoTrack Mobile is a smart energy monitoring and control application built with Flutter.
 
 ## Features
 
@@ -18,3 +18,7 @@
 
 ### 5. **User-Friendly UI**
    - The app offers a clean and intuitive interface, making it easy to navigate and manage connected devices.
+
+---
+
+EcoTrack Backend Development Team
