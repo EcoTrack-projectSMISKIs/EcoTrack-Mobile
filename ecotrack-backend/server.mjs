@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
-
+// feb24, 2:08am update
 dotenv.config();
 
 const mongoURI = process.env.MONGO_URI;
