@@ -27,7 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     final user = await _authService.registerWithEmail(email, password);
     if (user != null) {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacementNamed(context, '/login');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
