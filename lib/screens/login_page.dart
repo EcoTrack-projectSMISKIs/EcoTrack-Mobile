@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ecotrack_mobile/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ecotrack_mobile/screens/home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -10,41 +11,39 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController identifierController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
-  void loginUser() async {
-    if (!_formKey.currentState!.validate()) return;
+void loginUser() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+  final identifier = identifierController.text.trim(); // email, username, or phone
+  final password = passwordController.text.trim();
 
-    final user = await _authService.loginWithEmail(email, password);
-    if (user != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login Failed. Please check your credentials.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-
-    setState(() {
-      _isLoading = false;
-    });
+  final success = await _authService.loginWithIdentifier(identifier, password);
+  if (success) {
+    Navigator.pushReplacementNamed(context, '/home');
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Login Failed. Please check your credentials.'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+
+  setState(() {
+    _isLoading = false;
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -64,19 +63,15 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
-                  controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: "Email",
+                  controller: identifierController,
+                  decoration: const InputDecoration(
+                    labelText: "Email, Username, or Phone",
                     border: OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.email),
+                    prefixIcon: Icon(Icons.person),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return "Please enter your email";
-                    }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return "Enter a valid email";
+                      return "Please enter your login credential";
                     }
                     return null;
                   },
@@ -85,10 +80,10 @@ class _LoginPageState extends State<LoginPage> {
                 TextFormField(
                   controller: passwordController,
                   obscureText: true,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Password",
                     border: OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.lock),
+                    prefixIcon: Icon(Icons.lock),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {

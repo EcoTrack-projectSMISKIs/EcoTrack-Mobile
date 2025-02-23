@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+
 import 'package:ecotrack_mobile/screens/landing_page.dart';
 import 'package:ecotrack_mobile/screens/login_page.dart';
 import 'package:ecotrack_mobile/screens/register_page.dart';
 import 'package:ecotrack_mobile/screens/home_page.dart';
 import 'package:ecotrack_mobile/screens/profile_settings.dart';
 import 'package:ecotrack_mobile/screens/terms_conditions_page.dart';
-import 'package:ecotrack_mobile/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
   runApp(const MyApp());
 }
 
@@ -28,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: AuthWrapper(), // Handle initial authentication flow
+      home: AuthWrapper(),
       routes: {
         '/landing': (context) => const LandingPage(),
         '/login': (context) => const LoginPage(),
@@ -41,45 +38,79 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// **AuthWrapper Class** (Handles Protected Routes)
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
+  @override
+  _AuthWrapperState createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool isAuthenticated = false;
+  String name = "";
+  String username = "";
+  String email = "";
+  String phone = "";
+
+  @override
+  void initState() {
+    super.initState();
+    checkAuth();
+  }
+
+  Future<void> checkAuth() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+    setState(() {
+      isAuthenticated = token != null;
+      name = prefs.getString('name') ?? "";
+      username = prefs.getString('username') ?? "";
+      email = prefs.getString('email') ?? "";
+      phone = prefs.getString('phone') ?? "";
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasData) {
-          return const HomePage(); // If user is authenticated, go to HomePage
-        } else {
-          return const LandingPage(); // Otherwise, show LandingPage
-        }
-      },
-    );
+    return isAuthenticated ? const HomePage() : const LandingPage();
   }
 }
 
-/// **Protected Route Widget** (Ensures only authenticated users can access)
-class ProtectedRoute extends StatelessWidget {
+class ProtectedRoute extends StatefulWidget {
   final Widget child;
   const ProtectedRoute({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasData) {
-          return child; // If logged in, allow access
-        } else {
-          return const LandingPage(); // Redirect to LandingPage if not logged in
-        }
-      },
-    );
+  _ProtectedRouteState createState() => _ProtectedRouteState();
+}
+
+class _ProtectedRouteState extends State<ProtectedRoute> {
+  bool isAuthenticated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkAuth();
   }
+
+  Future<void> checkAuth() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+    setState(() {
+      isAuthenticated = token != null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return isAuthenticated ? widget.child : const LandingPage();
+  }
+}
+
+Future<void> logout(BuildContext context) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (context) => const LandingPage()),
+    (Route<dynamic> route) => false,
+  );
 }
