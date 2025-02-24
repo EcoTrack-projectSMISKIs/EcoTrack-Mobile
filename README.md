@@ -21,4 +21,8 @@ EcoTrack Mobile is a smart energy monitoring and control application built with 
 
 ---
 
+w/ firebase auth
+can be recycled lol
+
+---
 EcoTrack Backend Development Team
